@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GameHub - Genre Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Game Genre Explorer</h1>
+    <form action="get_games_by_genre.php" method="post">
+        <label for="genre">Select Genre:</label>
+        <select name="genre" id="genre" required>
+            <option value="">Select a genre</option>
+            <option value="RPG">RPG</option>
+            <option value="FPS">FPS</option>
+            <option value="Action">Action</option>
+            <!-- Add all your genres here -->
+        </select>
+        <button type="submit">Search</button>
+    </form>
+</body>
+</html>
