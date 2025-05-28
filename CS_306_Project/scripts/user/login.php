@@ -1,8 +1,19 @@
 <?php
 session_start();
 
-// Include database connection
-require_once '../includes/db_connection.php';
+// Database connection only - without the HTML content
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "gamehub";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 $errorMsg = "";
 
@@ -233,3 +244,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </body>
 </html>
+
+<?php
+$conn->close();
+?>
