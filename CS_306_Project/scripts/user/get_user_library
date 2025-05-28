@@ -1,0 +1,196 @@
+<?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$servername = "localhost";
+$username = "root";
+$password = ""; // change if needed
+$dbname = "gamehub";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$output_message = "";
+$test_executed = false;
+
+// Handle test case execution
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['test_case'])) {
+    $test_case = $_POST['test_case'];
+    $test_executed = true;
+
+    // Define test parameters for each test case
+    switch ($test_case) {
+        case '1': // Sort by price
+            $user_id = 1;  // example user id
+            $sort_option = 'price';
+            break;
+        case '2': // Sort alphabetically
+            $user_id = 2;
+            $sort_option = 'alphabetical';
+            break;
+        case '3': // Default sort (dateAdded desc)
+            $user_id = 3;
+            $sort_option = 'default';
+            break;
+        default:
+            $output_message = "Invalid test case.";
+            $test_case = null;
+    }
+
+    if ($test_case) {
+        $output_message = executeGetUserLibrary($conn, $user_id, $sort_option);
+    }
+}
+
+function executeGetUserLibrary($conn, $user_id, $sort_option) {
+    // Prepare and execute stored procedure call
+    $sql = "CALL GetUserLibrary(?, ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return "<div style='color:red;'>Prepare failed: " . $conn->error . "</div>";
+    }
+
+    $stmt->bind_param("is", $user_id, $sort_option);
+    if (!$stmt->execute()) {
+        return "<div style='color:red;'>Execute failed: " . $stmt->error . "</div>";
+    }
+
+    $result = $stmt->get_result();
+    if (!$result) {
+        return "<div style='color:red;'>Get result failed: " . $stmt->error . "</div>";
+    }
+
+    if ($result->num_rows === 0) {
+        return "<div>No records found for user ID {$user_id}.</div>";
+    }
+
+    // Format results as a table
+    $html = "<table border='1' cellpadding='8' cellspacing='0' style='width:100%; border-collapse: collapse;'>";
+    $html .= "<thead style='background:#ff6b00; color:#fff;'><tr>";
+    // Column headers
+    $fields = $result->fetch_fields();
+    foreach ($fields as $field) {
+        $html .= "<th>" . htmlspecialchars($field->name) . "</th>";
+    }
+    $html .= "</tr></thead><tbody>";
+
+    // Rows
+    while ($row = $result->fetch_assoc()) {
+        $html .= "<tr style='background:#16213e; color:#fff;'>";
+        foreach ($row as $cell) {
+            $html .= "<td>" . htmlspecialchars($cell) . "</td>";
+        }
+        $html .= "</tr>";
+    }
+    $html .= "</tbody></table>";
+
+    $stmt->close();
+
+    return $html;
+}
+
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GameHub - GetUserLibrary Procedure Demo</title>
+<style>
+    body {
+        background-color: #1a1a2e;
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+    }
+    h1 {
+        color: #ff6b00;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    form {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    button {
+        background: linear-gradient(135deg, #ff6b00, #ff8c42);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        flex-grow: 1;
+        max-width: 200px;
+    }
+    button:hover {
+        background: linear-gradient(135deg, #ff8c42, #ff6b00);
+        box-shadow: 0 5px 15px rgba(255,107,0,0.3);
+        transform: translateY(-2px);
+    }
+    button:active {
+        transform: translateY(0);
+    }
+    .output-section {
+        background-color: #16213e;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #0f3460;
+        min-height: 200px;
+        max-width: 1200px;
+        margin: 0 auto;
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px;
+        border: 1px solid #0f3460;
+    }
+    th {
+        background-color: #ff6b00;
+        color: #fff;
+    }
+    tr:nth-child(even) {
+        background-color: #0f1419;
+    }
+    tr:hover {
+        background-color: #33354a;
+    }
+</style>
+</head>
+<body>
+
+<h1>GameHub - GetUserLibrary Stored Procedure Demo</h1>
+
+<form method="POST">
+    <button type="submit" name="test_case" value="1">Sort by Price</button>
+    <button type="submit" name="test_case" value="2">Sort Alphabetically</button>
+    <button type="submit" name="test_case" value="3">Sort by Date Added (Default)</button>
+</form>
+
+<div class="output-section">
+    <?php 
+    if ($test_executed) {
+        echo $output_message;
+    } else {
+        echo "<div style='color:#666; text-align:center; font-style: italic;'>Click a test button above to run the stored procedure and see results here.</div>";
+    }
+    ?>
+</div>
+
+</body>
+</html>
