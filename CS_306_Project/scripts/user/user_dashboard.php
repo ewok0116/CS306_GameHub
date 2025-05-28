@@ -1,16 +1,4 @@
-<div class="user-actions">
-               
-                <a href="logout.php" class="logout-link">
-                    <div class="logout-icon">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">Logout</div>
-                        <div class="user-role">End Session</div>
-                    </div>
-                </a>
-            </div>        
-        <?php
+<?php
 session_start();
 
 // Check if user is logged in
@@ -19,8 +7,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] != 'user') {
     exit;
 }
 
-// Include database connection
-require_once '../includes/db_connection.php';
+// Database connection - same as login page
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "gamehub";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Get user details
 $user_id = $_SESSION['user_id'];
@@ -161,6 +160,7 @@ $games_result = $conn->query($games_query);
             font-size: 12px;
             color: #ccc;
         }
+        
         .logout-link {
             background-color: #16213e;
             padding: 12px 20px;
@@ -193,7 +193,6 @@ $games_result = $conn->query($games_query);
             color: white;
         }
         
-        /* Rest of the CSS remains the same as in the previous version */
         .section-title {
             font-size: 22px;
             margin-bottom: 20px;
@@ -350,6 +349,15 @@ $games_result = $conn->query($games_query);
                         <div class="user-role">User Profile</div>
                     </div>
                 </a>
+                <a href="logout.php" class="logout-link">
+                    <div class="logout-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">Logout</div>
+                        <div class="user-role">End Session</div>
+                    </div>
+                </a>
             </div>
         </div>
         
@@ -416,3 +424,7 @@ $games_result = $conn->query($games_query);
     </div>
 </body>
 </html>
+
+<?php
+$conn->close();
+?>
